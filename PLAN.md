@@ -1,97 +1,108 @@
 # MapSMS — Implementation Plan
 
-Share accurate location via SMS. Web + mobile.
+Share accurate location via SMS. No server. Phone-only. Philippines.
 
 ## 1. Goals
-- Get precise device location fast.
-- Send location by SMS, one tap.
-- Work offline / no data (SMS fallback).
-- Recipient needs no app — plain link + coordinates.
+- Precise GPS fix, offline.
+- Send location by SMS (regular load, no data).
+- Receive SMS → app reads it → shows pin on map.
+- Zero backend. Zero internet required (except map tiles, cached).
 
 ## 2. Core Features (MVP)
-1. **Locate me** — GPS fix, accuracy radius shown (± meters).
-2. **Accuracy gate** — wait for fix ≤ 20 m or timeout (15 s), then send best fix.
-3. **Share via SMS**
-   - Message: `I'm here: https://maps.google.com/?q=LAT,LNG (±8m) 14:32` + plus code + optional note.
-   - Mobile: native SMS composer (`sms:` URI / native API).
-   - Web: `sms:` link on phones; server-sent SMS (Twilio) on desktop.
-4. **Contacts** — pick from phone contacts or type number. Save favorites.
-5. **Map view** — show pin + accuracy circle.
-6. **Live share (phase 2)** — periodic SMS/link updates for N minutes.
-7. **SOS mode (phase 2)** — one button, send to emergency contacts.
+1. **Locate me** — GPS fix, accuracy (± m) shown.
+2. **Accuracy gate** — wait ≤ 20 m or 15 s timeout, send best fix.
+3. **Send SMS** — direct send from app (Android) or native composer (iOS).
+4. **SMS check / inbox** — app scans incoming SMS for MapSMS format, lists received locations.
+5. **Map view** — pin + accuracy circle, offline tiles for PH.
+6. **Contacts** — pick from phonebook, PH number validation (`+639XXXXXXXXX` / `09XXXXXXXXX`).
+7. **Navigate** — open received pin in Google Maps / Waze.
 
-## 3. Location Accuracy Strategy
-- `enableHighAccuracy: true` (GPS, not cell/Wi-Fi only).
-- Use `watchPosition`, keep best reading by `accuracy`.
-- Discard stale fixes (> 30 s old).
-- Show accuracy to user before sending.
-- Include altitude/floor if available.
-- Include **Plus Code** (works without street address).
-- Optional reverse geocode → street address.
-- Offline: coords + plus code still work in SMS.
+## 3. SMS Message Format
+Human-readable + machine-parsable. Recipient without app still understands.
+```
+MAPSMS 14.59951,120.98420 ±8m 14:32
+https://maps.google.com/?q=14.59951,120.98420
+Note: nasa gate ako
+```
+- Prefix `MAPSMS` = parser marker.
+- 5 decimals ≈ 1.1 m precision.
+- Keep ≤ 160 chars (1 SMS segment, 1 load charge).
+- Optional Plus Code fallback.
 
-## 4. Tech Stack
-| Layer | Choice | Why |
+## 4. Platform Reality (Important)
+| Feature | Android | iOS |
 |---|---|---|
-| App | React Native + Expo | One codebase: iOS, Android, Web |
-| Location | `expo-location` / browser Geolocation API | High accuracy, permissions |
-| SMS (device) | `expo-sms` / `sms:` URI | No cost, works without data |
-| SMS (server) | Twilio API | Desktop web, live share, SOS |
-| Map | `react-native-maps` / Leaflet + OpenStreetMap (web) | Free tiles |
-| Backend | Node.js + Express (serverless OK) | Twilio proxy, short links |
-| DB | SQLite/Postgres (phase 2) | Live-share sessions |
-| Plus Codes | `open-location-code` lib | Offline encoding |
+| Get GPS offline | ✅ | ✅ |
+| Send SMS silently from app | ✅ (`SEND_SMS`) | ❌ composer only, user taps Send |
+| Read incoming SMS | ✅ (`RECEIVE_SMS`/`READ_SMS`) | ❌ not allowed |
+| Auto-detect location SMS | ✅ | ❌ — user copy/pastes or taps link |
 
-## 5. Architecture
+- **Recommendation:** Android first. Most PH users Android.
+- iOS: send-only + paste-to-parse screen.
+- Google Play restricts SMS permissions. Options:
+  - Sideload APK (simplest, internal use).
+  - Request Play policy exception.
+  - Become default SMS app (heavy).
+  - Use **SMS Retriever / User Consent API** — no permission, reads single matching SMS with user tap. Play-safe.
+
+## 5. Tech Stack
+| Layer | Choice |
+|---|---|
+| App | React Native (Expo dev build / bare) |
+| Location | `expo-location` (high accuracy) |
+| SMS send | `react-native-sms` / native module `SmsManager` (Android), `expo-sms` (iOS) |
+| SMS read | Native Android module: `BroadcastReceiver` for `SMS_RECEIVED` |
+| Map | `react-native-maps` + OSM offline tiles (MapLibre) |
+| Storage | SQLite on device (received locations, history) |
+| Contacts | `expo-contacts` |
+
+## 6. Architecture (on-device only)
 ```
-[App: RN/Expo]
+[App]
   ├─ LocationService  → best-fix logic
-  ├─ MessageBuilder   → SMS text format
-  ├─ SmsService       → native composer | backend
-  └─ ContactsService
-[Backend: Node]
-  ├─ POST /sms/send   → Twilio
-  ├─ POST /share      → short link + live session
-  └─ GET  /l/:id      → recipient map page
+  ├─ MessageCodec     → encode/decode MAPSMS text
+  ├─ SmsSender        → SmsManager / composer
+  ├─ SmsReceiver      → native listener → parse → DB
+  ├─ LocalDB (SQLite) → history, contacts favs
+  └─ MapScreen        → offline tiles, pins
 ```
 
-## 6. Folder Structure
+## 7. Folder Structure
 ```
 mapsms/
-  app/            # Expo screens
-  src/services/   # location, sms, contacts
-  src/components/ # Map, ShareButton, AccuracyBadge
-  server/         # Express API
+  app/                 # screens: Home, Inbox, Map, Settings
+  src/services/        # location, sms, codec, db
+  src/components/      # Map, AccuracyBadge, ShareButton
+  android/             # native SMS receiver module
   PLAN.md
 ```
 
-## 7. Permissions & Privacy
-- Request location only on tap.
-- iOS: `NSLocationWhenInUseUsageDescription`.
-- Android: `ACCESS_FINE_LOCATION`, `READ_CONTACTS`.
-- No location stored server-side in MVP.
-- Live share: auto-expire, revocable link.
-- Rate-limit server SMS (abuse prevention).
+## 8. Permissions & Privacy
+- Android: `ACCESS_FINE_LOCATION`, `SEND_SMS`, `RECEIVE_SMS`, `READ_SMS`, `READ_CONTACTS`.
+- iOS: location only.
+- All data stays on phone.
+- Confirm before each send (avoid accidental load usage).
 
-## 8. Milestones
+## 9. Milestones
 | # | Deliverable | Est. |
 |---|---|---|
-| M1 | Expo scaffold, location + accuracy display | 2 d |
-| M2 | Message builder + native SMS share | 2 d |
-| M3 | Map view, contacts, favorites | 3 d |
-| M4 | Web build + Twilio backend | 3 d |
-| M5 | Testing (real devices, indoor/outdoor) | 2 d |
-| M6 | Live share + SOS | 4 d |
+| M1 | RN scaffold, GPS + accuracy display | 2 d |
+| M2 | MessageCodec + unit tests | 1 d |
+| M3 | Send SMS (Android direct, iOS composer) | 2 d |
+| M4 | Android SMS receiver + inbox | 3 d |
+| M5 | Map view, offline PH tiles, navigate out | 3 d |
+| M6 | Contacts, history, settings | 2 d |
+| M7 | Real-device test (Globe, Smart, DITO) | 2 d |
+| P2 | SOS, periodic auto-send, iOS paste parse | later |
 
-## 9. Testing
-- Unit: message builder, best-fix selection.
-- Device: Android + iOS, indoor/outdoor accuracy.
-- No-data mode: airplane + SMS only.
-- Web: Chrome/Safari mobile, desktop.
+## 10. Testing
+- Codec: encode/decode round-trip, malformed SMS.
+- Indoor/outdoor accuracy, Metro Manila + provincial.
+- Airplane mode + SMS only.
+- Networks: Globe, Smart, DITO, TNT, TM.
+- Dual-SIM selection.
 
-## 10. Open Questions
-- Need server SMS, or device-only?
-- Target platforms priority: Android, iOS, web?
-- Live tracking needed in MVP?
-- SMS cost budget (Twilio)?
-- Region/country for numbers?
+## 11. Open Questions
+- Android only OK for MVP?
+- Play Store or sideload APK?
+- Auto-send to group (SOS) needed?
