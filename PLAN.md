@@ -197,3 +197,21 @@ mapsms/
 
 ## 16. Open Questions
 - POCO M8 microSD slot / card inserted?
+
+## 17. Build Status
+| # | Status |
+|---|---|
+| M1 GPS + accuracy | ✅ done |
+| M2 Codec + tests | ✅ done |
+| M3 Send SMS (direct, dual-SIM) | ✅ code done |
+| M4 SMS receiver + inbox | ✅ code done |
+| M5 Map view, offline tiles, navigate | ✅ code done |
+| M6 Contacts, history, settings | ✅ code done |
+| M7 Real-device test | ⏳ needs APK on POCO M8 |
+| M8 SOS | ✅ code done |
+| M9 Map download manager (SD) | ✅ code done |
+
+### Changes vs plan
+- PH overview = downloadable pack (not bundled in APK) → smaller APK.
+- Power-button 5x SOS trigger → not done (needs accessibility service; deferred).
+- Map packs hosted as static files on GitHub Release (no app server).
