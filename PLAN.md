@@ -173,5 +173,27 @@ mapsms/
 - User enables "Install unknown apps".
 - In-app update check: compare version with static JSON on file host, download new APK.
 
-## 15. Open Questions
-- Your phone model?
+## 15. Target Test Device
+- **POCO M8 5G** — HyperOS 3.0 (Xiaomi), Android 16, 512 GB (102 GB used).
+- Build: `targetSdk 36`, `minSdk 26`.
+
+### Android 16 / HyperOS requirements
+- **Restricted settings:** sideloaded apps blocked from SMS permissions.
+  - User: Settings → Apps → MapSMS → ⋮ → "Allow restricted settings".
+  - App shows step-by-step guide on first run.
+- **Foreground service type** `location` (SOS repeat sends).
+- **Full-screen intent** permission (SOS alert on receiver).
+- **Notification** permission (Android 13+).
+- **Background location** — separate prompt, "Allow all the time" for SOS.
+- **HyperOS battery:** guide user to:
+  - Autostart → ON.
+  - Battery saver → "No restrictions".
+  - Lock app in Recents.
+- **MIUI/HyperOS "Send SMS" prompt** — HyperOS may ask per send; guide to set "Always allow".
+
+### Storage note
+- 410 GB free internal — maps fit easily.
+- Check if POCO M8 has microSD slot. No slot → internal storage auto-used.
+
+## 16. Open Questions
+- POCO M8 microSD slot / card inserted?
