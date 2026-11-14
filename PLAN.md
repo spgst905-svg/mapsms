@@ -155,12 +155,23 @@ mapsms/
 - No map downloaded → still show coordinates, distance + compass arrow to target.
 - "Open in Google Maps" if data available.
 
-### Feedback Questions
-- Which regions priority?
-- Max acceptable download size?
-- Bundle overview in APK, or download only?
-- Allow SD card storage?
+### Decisions (confirmed)
+- **Priority pack:** NCR + Region IV-A (CALABARZON) as one pack.
+  - Covers Metro Manila, Cavite, Laguna, Batangas, Rizal, Quezon.
+  - Zoom 0–16, est. 250–400 MB.
+  - Split option: NCR (~60 MB), Cavite–Laguna–Batangas (~150 MB), Rizal–Quezon (~150 MB).
+- Whole PH overview (z0–10) bundled in APK.
+- **Storage:** SD card default; fall back to internal if no SD.
+  - Use app-specific external dir (`getExternalFilesDirs`), no extra permission.
+  - Note: files deleted when app uninstalled.
+- Other regions: phase 2.
 
-## 14. Open Questions
-- Play Store or sideload APK?
+## 14. Distribution
+- **Direct install APK** (no Play Store).
+- No Play SMS policy restriction → full `SEND_SMS`/`READ_SMS`/`RECEIVE_SMS`.
+- Signed release APK, shared via link / file transfer.
+- User enables "Install unknown apps".
+- In-app update check: compare version with static JSON on file host, download new APK.
+
+## 15. Open Questions
 - Your phone model?
