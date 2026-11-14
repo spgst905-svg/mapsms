@@ -93,7 +93,9 @@ mapsms/
 | M5 | Map view, offline PH tiles, navigate out | 3 d |
 | M6 | Contacts, history, settings | 2 d |
 | M7 | Real-device test (Globe, Smart, DITO) | 2 d |
-| P2 | SOS, periodic auto-send, iOS paste parse | later |
+| M8 | SOS mode | 3 d |
+| M9 | Offline map download manager | 3 d |
+| P2 | iOS paste parse | later |
 
 ## 10. Testing
 - Codec: encode/decode round-trip, malformed SMS.
@@ -102,7 +104,63 @@ mapsms/
 - Networks: Globe, Smart, DITO, TNT, TM.
 - Dual-SIM selection.
 
-## 11. Open Questions
-- Android only OK for MVP?
+
+## 11. SOS Mode (MVP)
+- Big red button + hardware trigger (power button 5x, optional).
+- 3 s countdown, cancel option.
+- Sends to up to 5 emergency contacts, no confirm.
+- Message: `MAPSMS SOS 14.59951,120.98420 ±8m 14:32 BAT 23%`.
+- Repeats every 5 min until stopped (configurable).
+- Sends first fix fast (any accuracy), then better fix.
+- Optional: also text 911 info prompt (manual call).
+- Receiver: SOS SMS triggers loud alarm + full-screen alert.
+- Works offline, low battery mode.
+- Foreground service keeps running when screen off.
+
+## 12. Device Compatibility Check
+- App reads phone model on first launch (`expo-device`).
+- Checks: Android version (min 8.0 / API 26), GPS present, SIM present, dual-SIM, free storage.
+- Shows report: "Compatible ✅" or warnings.
+- Battery optimization warning (Xiaomi, Oppo, Vivo, Realme, Huawei kill background apps) → guide user to whitelist.
+- Need from you: your phone brand/model for testing priority.
+
+## 13. Offline Map Download
+### Source
+- OpenStreetMap data, vector tiles (MBTiles / PMTiles).
+- Renderer: MapLibre Native (offline support built-in).
+- Free, no API key.
+
+### Packs (Philippines)
+| Pack | Zoom | Est. size |
+|---|---|---|
+| Whole PH overview | 0–10 | ~40 MB |
+| Region (e.g. NCR, CALABARZON, Cebu) | 0–16 | 50–300 MB |
+| Custom area (draw box) | up to 17 | varies |
+| Around me (5 km radius) | up to 17 | ~10–30 MB |
+
+### Download Flow
+1. Settings → Offline Maps.
+2. Pick region list or "draw area" on map.
+3. Show size estimate + free storage.
+4. Download on Wi-Fi only (default), mobile data optional.
+5. Progress bar, pause/resume, background download.
+6. Saved to app storage; option SD card.
+7. Update check monthly; delete pack anytime.
+
+### Hosting (no own server)
+- Use public PMTiles on free static host (GitHub Releases / Cloudflare R2 free tier) — static file only, not app server.
+- Alternative: bundle small PH overview in APK (~40 MB), regions downloadable.
+
+### Fallback
+- No map downloaded → still show coordinates, distance + compass arrow to target.
+- "Open in Google Maps" if data available.
+
+### Feedback Questions
+- Which regions priority?
+- Max acceptable download size?
+- Bundle overview in APK, or download only?
+- Allow SD card storage?
+
+## 14. Open Questions
 - Play Store or sideload APK?
-- Auto-send to group (SOS) needed?
+- Your phone model?
