@@ -49,6 +49,15 @@ class MapSmsNativeModule : Module() {
     }
   }
 
+  private fun sendErrorText(code: Int): String = when (code) {
+    SmsManager.RESULT_ERROR_RADIO_OFF -> "Airplane mode / radio off"
+    SmsManager.RESULT_ERROR_NO_SERVICE -> "No signal"
+    SmsManager.RESULT_ERROR_LIMIT_EXCEEDED -> "Too many SMS sent, wait a bit"
+    SmsManager.RESULT_RIL_SMS_SEND_FAIL_RETRY, SmsManager.RESULT_RIL_NETWORK_REJECT ->
+      "Network rejected SMS (code $code): check load / promo, or carrier blocked content"
+    else -> "Send failed (code $code): check load / signal"
+  }
+
   override fun definition() = ModuleDefinition {
     Name("MapSmsNative")
     Events("onSmsReceived", "onDownloadProgress")
@@ -85,7 +94,7 @@ class MapSmsNativeModule : Module() {
             settled = true
             try { ctx.unregisterReceiver(this) } catch (_: Exception) {}
             if (failed == null) promise.resolve(true)
-            else promise.reject("ERR_SMS_SEND", "Send failed, code $failed (check load / signal)", null)
+            else promise.reject("ERR_SMS_SEND", sendErrorText(failed!!), null)
           }
         }
       }

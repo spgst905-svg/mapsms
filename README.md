@@ -3,7 +3,7 @@
 Share accurate GPS location by plain SMS. No server, no mobile data. Android-first (tested target: POCO M8 5G, HyperOS 3 / Android 16). Philippines.
 
 ## Features
-- **Share** — GPS best-fix (waits ≤ 20 m or 15 s), accuracy badge, sends 1 SMS (≤ 160 chars) with coords + Google Maps link + note.
+- **Share** — GPS best-fix (waits ≤ 20 m or 15 s), accuracy badge, sends 1 SMS (≤ 160 chars) with coords + accuracy + note (no links — carriers block them).
 - **Inbox** — auto-reads incoming `MAPSMS` texts (even when app closed), shows on map.
 - **Location detail** — offline map, distance + compass arrow, navigate (Google Maps / Waze), call.
 - **SOS** — 3 s countdown, sends to up to 5 emergency contacts, repeats every 2/5/10/15 min via foreground service (screen off OK). Receiver phone gets loud full-screen alarm.
@@ -14,10 +14,9 @@ Share accurate GPS location by plain SMS. No server, no mobile data. Android-fir
 ## SMS format
 ```
 MAPSMS 14.59951,120.98420 ±8m 14:32
-https://maps.google.com/?q=14.59951,120.98420
 nasa gate ako
 ```
-SOS: `MAPSMS SOS 14.59951,120.98420 ±8m 14:32 BAT 23%`. Recipients without the app just tap the link.
+SOS: `MAPSMS SOS 14.59951,120.98420 ±8m 14:32 BAT 23%`. No web link: Globe/Smart block P2P SMS with URLs. Recipients without the app copy the coordinates into Google Maps.
 
 ## Build the APK (direct install)
 Expo Go **cannot** send/read SMS — build an APK.

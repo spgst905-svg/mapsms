@@ -16,6 +16,17 @@ test('round trip', () => {
   assert.deepEqual(d, { sos: true, lat: 14.59951, lng: 120.98422, accuracy: 8, time: '14:32', battery: 23, note: 'help' });
 });
 
+test('no URL in SMS (carriers block links)', () => {
+  const s = encode(fix, { note: 'hi' });
+  assert.ok(!/https?:|www\.|maps\.google/i.test(s), s);
+  assert.equal(s, 'MAPSMS 14.59951,120.98422 ±8m 14:32\nhi');
+});
+
+test('decode old format with link', () => {
+  const d = decode('MAPSMS 14.59951,120.98422 ±8m 14:32\nhttps://maps.google.com/?q=14.59951,120.98422\nnasa gate')!;
+  assert.equal(d.note, 'nasa gate');
+});
+
 test('decode rejects junk', () => {
   assert.equal(decode('hello'), null);
   assert.equal(decode('MAPSMS 99.0,10.0'), null);

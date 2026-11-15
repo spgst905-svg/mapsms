@@ -20,7 +20,8 @@ export function encode(fix: Fix, opts: { sos?: boolean; battery?: number; note?:
   if (opts.sos) parts.push('SOS');
   parts.push(`${lat},${lng}`, `±${Math.round(fix.accuracy)}m`, `${pad(d.getHours())}:${pad(d.getMinutes())}`);
   if (opts.battery != null) parts.push(`BAT ${Math.round(opts.battery)}%`);
-  let msg = parts.join(' ') + `\nhttps://maps.google.com/?q=${lat},${lng}`;
+  // No URL: PH carriers (Globe/Smart) block person-to-person SMS containing links.
+  let msg = parts.join(' ');
   if (opts.note) msg += `\n${opts.note}`;
   return msg.slice(0, 160);
 }
@@ -34,8 +35,14 @@ export function decode(text: string): Decoded | null {
   const lat = parseFloat(m[2]);
   const lng = parseFloat(m[3]);
   if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
-  const lines = text.split('\n');
-  const note = lines.length > 2 ? lines.slice(2).join('\n').trim() || null : null;
+  // Note = lines after header; skip map links from older app versions.
+  const note =
+    text
+      .split('\n')
+      .slice(1)
+      .filter((l) => !/^https?:\/\//i.test(l.trim()))
+      .join('\n')
+      .trim() || null;
   return {
     sos: !!m[1],
     lat,

@@ -21,7 +21,6 @@ Share accurate location via SMS. No server. Phone-only. Philippines.
 Human-readable + machine-parsable. Recipient without app still understands.
 ```
 MAPSMS 14.59951,120.98420 ±8m 14:32
-https://maps.google.com/?q=14.59951,120.98420
 Note: nasa gate ako
 ```
 - Prefix `MAPSMS` = parser marker.
