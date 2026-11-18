@@ -23,6 +23,7 @@ export default function Layout() {
         <Tabs.Screen name="index" options={{ title: 'Timer', tabBarIcon: icon('⏳') }} />
         <Tabs.Screen name="stopwatch" options={{ title: 'Stopwatch', tabBarIcon: icon('⏱') }} />
         <Tabs.Screen name="laps" options={{ title: 'Laps', tabBarIcon: icon('🏁') }} />
+        <Tabs.Screen name="bench" options={{ title: 'Bench', tabBarIcon: icon('📊') }} />
         <Tabs.Screen name="beeper" options={{ title: 'Beeper', tabBarIcon: icon('🔔') }} />
         <Tabs.Screen name="sounds" options={{ title: 'Sounds', tabBarIcon: icon('🔊') }} />
       </Tabs>

@@ -74,3 +74,20 @@ test('format helpers', () => {
   assert.equal(clampInt('abc', 0, 59), 0);
   assert.equal(clampInt('75', 0, 59), 59);
 });
+
+import { upsertPreset, removePreset } from '../src/lib/presets.ts';
+
+test('presets: add, overwrite by name (case-insensitive), ignore blank, remove, deep copy', () => {
+  const c = { a: [1] };
+  let list = upsertPreset([], '  Tabata ', c, 'p1');
+  assert.equal(list.length, 1);
+  assert.equal(list[0].name, 'Tabata');
+  c.a.push(2);
+  assert.deepEqual(list[0].config, { a: [1] });
+  list = upsertPreset(list, 'tabata', { a: [9] }, 'p2');
+  assert.equal(list.length, 1);
+  assert.equal(list[0].id, 'p1');
+  assert.deepEqual(list[0].config, { a: [9] });
+  assert.equal(upsertPreset(list, '   ', c, 'p3'), list);
+  assert.deepEqual(removePreset(list, 'p1'), []);
+});

@@ -1,5 +1,7 @@
 import { createStore } from './store';
 import type { TimerConfig } from './timer-engine';
+import type { Preset } from './presets';
+import type { BenchRecord, Person, Task } from './benchmark';
 
 export type SoundRole = 'stepEnd' | 'delayEnd' | 'finish' | 'beeper';
 
@@ -33,3 +35,15 @@ export type BeeperConfig = {
 };
 
 export const beeperStore = createStore<BeeperConfig>('beeper.v1', { intervalSec: 10, maxBeeps: 0, startDelaySec: 3 });
+
+
+export const presetStore = createStore<{ timer: Preset<TimerConfig>[]; beeper: Preset<BeeperConfig>[] }>('presets.v1', {
+  timer: [],
+  beeper: [],
+});
+
+export const benchStore = createStore<{ tasks: Task[]; persons: Person[]; records: BenchRecord[] }>('bench.v1', {
+  tasks: [],
+  persons: [],
+  records: [],
+});

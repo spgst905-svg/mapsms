@@ -3,7 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { Button, Card, Label, NumberField, Screen, s } from '../components/ui';
 import { formatMs } from '../lib/format';
-import { beeperStore, settingsStore } from '../lib/settings';
+import { Presets } from '../components/Presets';
+import { newId } from '../lib/benchmark';
+import { removePreset, upsertPreset } from '../lib/presets';
+import { beeperStore, presetStore, settingsStore } from '../lib/settings';
 import { soundName, playSound, buzz } from '../lib/sounds';
 import { beepsElapsed } from '../lib/timer-engine';
 import { useNow } from '../hooks/useNow';
@@ -17,6 +20,7 @@ function Awake() {
 export default function Beeper() {
   const cfg = beeperStore.use();
   const settings = settingsStore.use();
+  const presets = presetStore.use();
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const now = useNow(startedAt !== null, 50);
 
@@ -81,6 +85,13 @@ export default function Beeper() {
                 fired.current = 0;
                 setStartedAt(Date.now());
               }} />
+            <Presets
+              title="Saved beepers"
+              presets={presets.beeper}
+              onSave={(name) => presetStore.set((p) => ({ beeper: upsertPreset(p.beeper, name, beeperStore.get(), newId('p')) }))}
+              onLoad={(p) => beeperStore.set({ ...p.config })}
+              onDelete={(id) => presetStore.set((p) => ({ beeper: removePreset(p.beeper, id) }))}
+            />
           </>
         )}
       </ScrollView>

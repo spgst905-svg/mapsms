@@ -2,7 +2,10 @@ import { useKeepAwake } from 'expo-keep-awake';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 import { Button, Card, DurationField, Label, NumberField, Screen, s } from '../components/ui';
 import { formatMs } from '../lib/format';
-import { timerStore } from '../lib/settings';
+import { Presets } from '../components/Presets';
+import { newId } from '../lib/benchmark';
+import { removePreset, upsertPreset } from '../lib/presets';
+import { presetStore, timerStore } from '../lib/settings';
 import { totalMs, type Step } from '../lib/timer-engine';
 import { useTimerRun } from '../hooks/useTimerRun';
 import { colors } from '../theme';
@@ -17,6 +20,7 @@ const newStep = (n: number): Step => ({ id: `s${nextId++}`, label: `Step ${n}`, 
 
 export default function TimerScreen() {
   const cfg = timerStore.use();
+  const presets = presetStore.use();
   const run = useTimerRun(cfg);
   const editing = !run.active;
 
@@ -75,6 +79,14 @@ export default function TimerScreen() {
             </Card>
 
             <Button title="Start" tone="go" onPress={run.start} disabled={run.phases.length === 0} />
+
+            <Presets
+              title="Saved timers"
+              presets={presets.timer}
+              onSave={(name) => presetStore.set((p) => ({ timer: upsertPreset(p.timer, name, timerStore.get(), newId('p')) }))}
+              onLoad={(p) => timerStore.set(JSON.parse(JSON.stringify(p.config)))}
+              onDelete={(id) => presetStore.set((p) => ({ timer: removePreset(p.timer, id) }))}
+            />
           </>
         )}
       </ScrollView>
