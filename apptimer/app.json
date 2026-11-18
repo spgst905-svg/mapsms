@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "App Timer",
+    "slug": "apptimer",
+    "scheme": "apptimer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.apptimer.app"
+    },
+    "android": {
+      "package": "com.apptimer.app",
+      "permissions": ["VIBRATE", "WAKE_LOCK"],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": { "bundler": "metro" },
+    "plugins": ["expo-router", "expo-audio"]
+  }
+}
